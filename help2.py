@@ -464,6 +464,55 @@ class OracleClientSingleton(OracleClient):
         AUTH
 =====================
 
+############ basic auth #############
+#have url for login to return login page
+# name attribute should be set so that reverse url lookup can be done using name
+
+
+---- in urls ----
+url(r'^login/$', TemplateView.as_view(template_name='login.html'), name='login')
+
+--- in views ----
+from django.shortcuts import (render, reverse, HttpResponseRedirect)
+from django.contrib.auth.decorators import login_required
+
+''' method one - use is_authenticated '''
+# use reverse for reverse usl lookup by name
+def home(request):
+    if request.user.is_authenticated():
+        return render(request, "home.html", {})
+    else:
+        return HttpResponseRedirect(reverse("login"))
+
+
+''' method two - use login required decorator'''
+# by default looks for LOGIN_URL attribute in settings.py
+@login_required
+def home(request):
+    return render(request, "home.html", {})
+    
+    
+    
+--- in settings.py ---
+# using reverse instead of reverse_lazy causes an exception since the apps are not loaded at the point of executing settings
+#    raise AppRegistryNotReady("Apps aren't loaded yet.")
+# django.core.exceptions.AppRegistryNotReady: Apps aren't loaded yet.
+
+from django.urls import reverse_lazy
+LOGIN_URL = reverse_lazy('login')
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend'
+]
+
+AUTH_USER_MODEL = 'auth.User'
+# redirects to this url when successfully authenticated
+LOGIN_REDIRECT_URL = ''
+
+
+
+####### end basic auth  ##############
+
 
 # auth for home page 
 # decorator login required redirects if user is not logged in 
